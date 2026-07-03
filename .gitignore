@@ -1,0 +1,20 @@
+# Build artifacts
+build/
+Testing/
+
+# Development configuration — contains credentials, never commit
+netcap.toml
+
+# Development runtime directories
+rings/
+captures/
+
+# Capture files
+*.pcap
+
+# Editor and OS artifacts
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

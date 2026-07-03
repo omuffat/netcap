@@ -1,0 +1,138 @@
+# netcap.toml.example
+#
+# Reference configuration for the netcap capture agent.
+# Copy this file to the appropriate location for your platform:
+#
+#   Linux / macOS  : /etc/netcap/netcap.toml
+#   Windows        : C:\ProgramData\netcap\netcap.toml
+#   Development    : ./netcap.toml  (run from the repository root)
+#
+# All keys are optional unless noted as REQUIRED.  Absent keys use the
+# CN_DEFAULT_* values defined in config/config.h.
+#
+# After editing, validate the file with:
+#   netcap-ctl config check
+
+# ---------------------------------------------------------------------------
+# Logging
+#
+# 0 = ERROR   (only fatal conditions)
+# 1 = WARN    (default — recommended for production)
+# 2 = INFO    (service lifecycle events)
+# 3 = DEBUG   (verbose; do not use in production)
+# ---------------------------------------------------------------------------
+log_level = 1
+
+# ---------------------------------------------------------------------------
+# Paths
+#
+# These are set automatically by the installer.  Override only when you need
+# a non-standard layout (e.g. a dedicated data volume).
+# ---------------------------------------------------------------------------
+# ring_dir        = "/var/lib/netcap/rings"       # Linux default
+# ring_dir        = "/Library/Application Support/netcap/rings"  # macOS default
+# ring_dir        = "C:\\ProgramData\\netcap\\rings"              # Windows default
+
+# savefile_dir    = "/usr/share/netcap/captures"  # Linux default
+# savefile_dir    = "/Library/Application Support/netcap/captures"  # macOS default
+# savefile_dir    = "C:\\Program Files\\netcap\\data\\captures"      # Windows default
+
+# ---------------------------------------------------------------------------
+# Savefile rotation
+#
+# A new .pcap file is opened for each active interface every
+# savefile_rotation_secs seconds.  When savefile_max_count files exist for
+# an interface, the oldest is deleted before a new one is created.
+#
+# Filename format: netcap_<interface>_<YYYY>_<MM>_<DD>_<HH>_<mm>_<SS>.pcap
+# ---------------------------------------------------------------------------
+savefile_rotation_secs = 180   # 3 minutes (range: 60–86400)
+savefile_max_count     = 10    # per interface (range: 1–1000)
+
+# ---------------------------------------------------------------------------
+# Network interfaces
+#
+# One [[interfaces]] block per interface to capture.
+# Omitting this section entirely is valid: the service starts but does not
+# capture until interfaces are added via the GUI or netcap-ctl.
+# ---------------------------------------------------------------------------
+
+[[interfaces]]
+name    = "eth0"   # REQUIRED — OS interface name (e.g. eth0, en0, Ethernet)
+enabled = true     # false = configured but not started
+
+# ring_size: per-interface ring buffer in bytes.
+# Must be a power-of-two multiple of 4096.  Default: 64 MiB.
+# ring_size = 67108864  # 64 MiB
+
+# snaplen: maximum bytes captured per packet.  Default: 65535 (full packet).
+# snaplen = 65535
+
+# bpf_filter: libpcap filter expression.  Default: "" (capture everything).
+# Examples:
+#   bpf_filter = "tcp port 443"
+#   bpf_filter = "not arp"
+# bpf_filter = ""
+
+# [[interfaces]]
+# name    = "eth1"
+# enabled = true
+
+# ---------------------------------------------------------------------------
+# Upload (optional)
+#
+# Upload is disabled when endpoint_url or auth_token is absent.
+# Both must be set to enable upload.
+# ---------------------------------------------------------------------------
+
+# [upload]
+
+# REQUIRED for upload — HTTPS endpoint.  Must start with "https://".
+# endpoint_url = "https://example.com/api/upload"
+
+# REQUIRED for upload — Bearer token sent in the Authorization header.
+# Store this file with mode 0600 to protect the token.
+# auth_token = "your-secret-token-here"
+
+# chunk_size: upload chunk size in bytes.  Default: 1 MiB.
+# chunk_size = 1048576
+
+# retry_max: maximum retry attempts on transient failure.  Default: 3.
+# retry_max = 3
+
+# retry_delay_ms: initial backoff before first retry, in milliseconds.
+# Subsequent retries use exponential backoff.  Default: 1000 ms.
+# retry_delay_ms = 1000
+
+# worker_count: number of upload worker threads in the shared pool.
+# Default: 2.  Maximum: 8.
+# worker_count = 2
+
+# capture_upload_traffic: when false (default), traffic destined for
+# endpoint_url is excluded from capture via an auto-injected BPF exclusion
+# (resolved at startup by DNS lookup of the endpoint hostname).
+# Set to true only if you explicitly want to capture your own upload traffic.
+# capture_upload_traffic = false
+
+# compress: when true, each savefile is gzip-compressed in a single stream
+# before upload.  Content-Encoding: gzip is set on the HTTP request.
+# Savefiles on disk are never compressed regardless of this setting.
+# Default: false.
+# compress = false
+
+# auto: when true, each fully-rotated savefile is automatically pushed to the
+# upload queue.  Requires both endpoint_url and auth_token to be set.
+# Files closed at service stop (partial rotation) are never auto-uploaded.
+# Default: false.
+# auto = false
+
+# [upload.tls]
+
+# ca_cert_path: path to a custom CA certificate bundle (PEM).
+# Default: "" = use the system trust store.
+# ca_cert_path = "/etc/netcap/ca-bundle.pem"
+
+# client_cert_path and client_key_path: enable mutual TLS (mTLS).
+# Both must be set together, or both must be absent.
+# client_cert_path = "/etc/netcap/client.crt"
+# client_key_path  = "/etc/netcap/client.key"
