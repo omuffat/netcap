@@ -114,3 +114,66 @@ add_subdirectory(gui)
 add_subdirectory(cli)
 enable_testing()
 add_subdirectory(tests)
+
+# ---------------------------------------------------------------------------
+# Install rules
+#
+# All destinations are relative to CPACK_PACKAGING_INSTALL_PREFIX ("/").
+# For a direct install use:  cmake --install build --prefix /
+# ---------------------------------------------------------------------------
+
+install(TARGETS netcapd    DESTINATION usr/sbin)
+install(TARGETS netcap-ctl DESTINATION usr/bin)
+
+install(FILES service/netcapd.service
+        DESTINATION lib/systemd/system)
+
+install(FILES netcap.toml.example
+        DESTINATION etc/netcap
+        RENAME netcap.toml)
+
+# ---------------------------------------------------------------------------
+# CPack — Debian package
+#
+# Build with:
+#   cmake -B build -DCMAKE_BUILD_TYPE=Release
+#   cmake --build build
+#   cd build && cpack -G DEB
+#
+# Output: build/netcap_0.1.0_amd64.deb
+# ---------------------------------------------------------------------------
+
+set(CPACK_PACKAGE_NAME     "netcap")
+set(CPACK_PACKAGE_VERSION  "0.1.0")
+set(CPACK_PACKAGE_VENDOR   "Comoe Networks")
+set(CPACK_PACKAGE_CONTACT  "contact@comoe-networks.com")
+
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
+    "Cross-platform network capture agent")
+set(CPACK_PACKAGE_DESCRIPTION
+"netcap is a network capture daemon that writes rotating .pcap savefiles
+ for each configured network interface. Savefiles can be uploaded to an
+ HTTPS endpoint manually or automatically on rotation.
+ Supports BPF filters, gzip compression, and mutual TLS (mTLS).")
+
+set(CPACK_PACKAGING_INSTALL_PREFIX "/")
+set(CPACK_GENERATOR                "DEB")
+
+set(CPACK_DEBIAN_FILE_NAME         "DEB-DEFAULT")
+set(CPACK_DEBIAN_PACKAGE_SECTION   "net")
+set(CPACK_DEBIAN_PACKAGE_PRIORITY  "optional")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER
+    "Comoe Networks <contact@comoe-networks.com>")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS
+    "libpcap0.8, libcurl4, zlib1g, libcap2")
+
+# /etc/netcap/netcap.toml is a conffile: dpkg preserves operator edits on upgrade.
+set(CPACK_DEBIAN_PACKAGE_CONFFILES "/etc/netcap/netcap.toml")
+
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
+    "${CMAKE_CURRENT_SOURCE_DIR}/package/debian/preinst"
+    "${CMAKE_CURRENT_SOURCE_DIR}/package/debian/postinst"
+    "${CMAKE_CURRENT_SOURCE_DIR}/package/debian/prerm"
+    "${CMAKE_CURRENT_SOURCE_DIR}/package/debian/postrm")
+
+include(CPack)

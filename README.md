@@ -205,4 +205,4 @@ with development assistance from [Claude Code](https://claude.ai/code)
 
 ## License
 
-BSD 2-Clause License. See [LICENSE](LICENSE) for details.
+BSD 2-Clause License. See [LICENSE](https://github.com/omuffat/netcap/blob/main/LICENSE) for details.

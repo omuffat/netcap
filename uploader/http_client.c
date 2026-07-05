@@ -355,10 +355,11 @@ cn_err_t cn_http_client_post_file(cn_http_client_t *client,
     if (cn_strnlen(device,     CN_HOST_NAME_MAX)  >= CN_HOST_NAME_MAX) { return CN_ERR_INVAL; }
     if (cn_strnlen(filename,   CN_PATH_MAX)       >= CN_PATH_MAX)     { return CN_ERR_INVAL; }
 
-    uint8_t  *file_buf = NULL;
-    size_t    file_len = 0;
-    uint8_t  *gz_buf   = NULL;
-    cn_err_t  rc       = CN_OK;
+    uint8_t           *file_buf = NULL;
+    size_t             file_len = 0;
+    uint8_t           *gz_buf   = NULL;
+    struct curl_slist *headers  = NULL;
+    cn_err_t           rc       = CN_OK;
 
     /* Read the savefile into memory. */
     rc = read_file(file_path, &file_buf, &file_len);
@@ -383,8 +384,6 @@ cn_err_t cn_http_client_post_file(cn_http_client_t *client,
     /* ------------------------------------------------------------------
      * Build per-request header list.
      * ---------------------------------------------------------------- */
-    struct curl_slist *headers = NULL;
-
     headers = curl_slist_append(headers, "Content-Type: application/octet-stream");
     if (headers == NULL) { rc = CN_ERR_NOMEM; goto cleanup; }
 

@@ -1,0 +1,23 @@
+#!/bin/sh
+set -e
+
+# Create runtime data directories with correct ownership.
+install -d -m 0750 -o netcap -g netcap /var/lib/netcap/rings
+install -d -m 0750 -o netcap -g netcap /usr/share/netcap/captures
+
+# Restrict the config directory and file — auth_token must not be world-readable.
+chown root:netcap /etc/netcap
+chmod 0750 /etc/netcap
+if [ -f /etc/netcap/netcap.toml ]; then
+    chown root:netcap /etc/netcap/netcap.toml
+    chmod 0640 /etc/netcap/netcap.toml
+fi
+
+# Reload systemd so it picks up the new unit file.
+systemctl daemon-reload || true
+
+# On upgrade: restart the service if it was running before the upgrade.
+if [ -f /tmp/.netcap-was-active ]; then
+    rm -f /tmp/.netcap-was-active
+    systemctl start netcapd || true
+fi

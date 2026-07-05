@@ -1,0 +1,18 @@
+#!/bin/sh
+set -e
+
+systemctl daemon-reload || true
+
+if [ "$1" = "purge" ]; then
+    # Remove runtime data directories (not managed by dpkg).
+    rm -rf /var/lib/netcap
+    rm -rf /usr/share/netcap
+
+    # Remove the system user and group.
+    if getent passwd netcap > /dev/null 2>&1; then
+        deluser --system netcap || true
+    fi
+    if getent group netcap > /dev/null 2>&1; then
+        delgroup --system netcap || true
+    fi
+fi

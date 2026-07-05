@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "upgrade" ]; then
+    # Remember whether the service was active so postinst can restart it.
+    if systemctl is-active --quiet netcapd 2>/dev/null; then
+        touch /tmp/.netcap-was-active || true
+    fi
+    systemctl stop netcapd || true
+elif [ "$1" = "remove" ]; then
+    if systemctl is-active --quiet netcapd 2>/dev/null; then
+        systemctl stop netcapd || true
+    fi
+    systemctl disable netcapd 2>/dev/null || true
+fi

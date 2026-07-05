@@ -1,0 +1,30 @@
+[Unit]
+Description=netcap network capture agent
+Documentation=https://github.com/omuffat/netcap
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+ExecStart=/usr/sbin/netcapd
+Restart=on-success
+RestartSec=5s
+
+User=netcap
+Group=netcap
+
+# Grant CAP_NET_RAW so the daemon can open pcap handles.
+# caps.c drops the capability immediately after all handles are open.
+AmbientCapabilities=CAP_NET_RAW
+CapabilityBoundingSet=CAP_NET_RAW
+
+# /run/netcap/ is created at service start and removed at stop.
+# The IPC socket lives here.
+RuntimeDirectory=netcap
+RuntimeDirectoryMode=0755
+
+# sd_notify watchdog — fed every ~5 s from the IPC event loop.
+WatchdogSec=30s
+
+[Install]
+WantedBy=multi-user.target
